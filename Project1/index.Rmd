@@ -1,0 +1,10 @@
+---
+title: "Leaflet Map"
+author: "Fenton Taylor"
+date: "December 20, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
