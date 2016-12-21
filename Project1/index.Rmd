@@ -8,11 +8,14 @@ output: html_document
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
-```{r}
+```{r,message=FALSE}
 library(leaflet)
+library(dplyr)
 brew <- read.csv("C:/Users/sec/GitHubRepos/DevelopingDataProducts/Project1/breweries.csv", 
                  header=TRUE)
-brew$name <- as.character(brew$name)
+brew <-  mutate(brew, 
+                name = as.character(brew$name),
+                siteHTML = paste0("<a href='http://www.",website,"'>",name,"</a>"))
 ```
 
 ```{r}
@@ -25,7 +28,8 @@ brew %>%
     leaflet() %>%
     addTiles() %>%
     addMarkers(lat=brew$lat, lng=brew$lng, 
-               popup=brew$name, 
-               icon=myIcon)
+               popup=brew$siteHTML, 
+               icon=myIcon,
+               clusterOptions = markerClusterOptions())
 
 ```
