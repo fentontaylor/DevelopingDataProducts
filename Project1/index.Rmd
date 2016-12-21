@@ -18,6 +18,10 @@ brew <-  mutate(brew,
                 siteHTML = paste0("<a href='http://www.",website,"'>",name,"</a>"))
 ```
 
+#### Here is a listing of craft breweries in the Los Angeles/South Bay area. There are certainly more breweries than appear on this map. Hopefully they will be added soon. 
+
+#### Clicking on a marker on the map will give the link to the brewery's website. Hopefully you find something interesting!
+
 ```{r}
 myIcon <- makeIcon(
   iconUrl = "http://i.imgur.com/OBSjp4L.png",
@@ -32,4 +36,13 @@ brew %>%
                icon=myIcon,
                clusterOptions = markerClusterOptions())
 
+```
+
+## Alphabetical List of Breweries on Map
+
+```{r, comment=""}
+library(knitr)
+brew <- arrange(brew, name)
+brewlist <- cbind(1:nrow(brew), brew$name)
+kable(brewlist, col.names = c("", "Brewery Name"))
 ```
