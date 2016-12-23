@@ -1,0 +1,17 @@
+---
+title: "Week 3 Assignment"
+author: "Fenton Taylor"
+date: "December 22, 2016"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(plotly)
+```
+
+## Plot Test
+
+```{r, message=FALSE, warning=FALSE}
+plot_ly(mtcars, x = ~wt, y = ~mpg, mode = "markers")
+```
