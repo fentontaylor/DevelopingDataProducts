@@ -1,5 +1,6 @@
 ---
 title: "Week 3 Assignment"
+subtitle: "Life Expectancy: Best, Worst, and Most Improved"
 author: "Fenton Taylor"
 date: "December 22, 2016"
 output: slidy_presentation
@@ -8,14 +9,60 @@ output: slidy_presentation
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 library(plotly)
+library(dplyr)
+library(reshape2)
 ```
 
-## Plot Test
+## The Data
+The data for this analysis is from: [data.worldbank.org](http://data.worldbank.org/indicator/SP.DYN.LE00.IN).
 
-```{r, message=FALSE, warning=FALSE}
-set.seed(4343)
-x <- rnorm(10)
-y <- rnorm(10)
-pts <- cbind.data.frame(x,y)
-plot_ly(pts, x=~x, y=~y, mode="markers")
+- The dataset contains the average life expectancy for 264 countries and regions from 1960-2014. Some of the countries have incomplete data, and will be excluded from the analysis.
+- `meanLE`, the average of life expectancy from 1960-2014, and `changeInLE`, the difference in life expectancy from 1960-2014, have been calculated and added to the data.
+
+### A small sample of the data:
+
+```{r, message=FALSE, warning=FALSE, comment=""}
+life <- read.csv("lifeExp.csv")
+life <- life[,-(60:61)]
+life <- life[complete.cases(life)==TRUE,]
+life$meanLE <- rowMeans(life[,5:59])
+life$changeInLE <- life$X2014-life$X1960
+life[life$Country.Name%in%c("Aruba","Brazil","Canada","Denmark","Ethiopia","Finland","Germany", "Saudi Arabia", "Zimbabwe"), c(1,5:6,59:61)]
 ```
+
+## Best and Worst
+```{r}
+life <- arrange(life, desc(meanLE))
+bw <- life[c(1:10,(nrow(life)-9):nrow(life)),c(1,2,60)]
+bw$class <- gl(2,10, labels=c("Best 10", "Worst 10"))
+bw$Country.Name <- factor(bw$Country.Name, levels=bw$Country.Name[order(bw$meanLE)])
+g <- ggplot(bw, aes(x=Country.Name, y=meanLE, fill=class)) + 
+    theme_minimal()+
+    geom_bar(stat = "identity")+
+    scale_fill_manual(values=c("green3", "firebrick2"))+
+    coord_flip() +
+    labs(y='Mean Life Expectancy', x='Country', title="Ten Best and Worst Countries\nFor Life Expectancy (1960-2014)") +
+    theme(legend.position = 'none')
+p <- ggplotly(g)
+p
+```
+
+## Most Improved
+```{r}
+mi <- arrange(life, desc(changeInLE))[1:12,-c(2:4,60:61)]
+miMelt <- melt(mi, id.vars=1, measure.vars=2:56, value.name='LifeExp')
+miMelt$Year <- rep(1960:2014, each=12)
+g2 <- ggplot(miMelt, aes(x=Year, y=LifeExp,color=Country.Name))+
+    geom_line()+
+    labs(y='Life Expectancy', title='Top 12 Countries with Most Improved Life Expectancy')+
+    theme(legend.title = element_blank())
+p2 <- ggplotly(g2)
+p2
+
+```
+
+## The End
+Thanks for checking it out. Here is the link to the github repo, in case you are 
+interested in checking out the code for the presentation.  
+
+[Week 3 Assignment](https://github.com/fentontaylor/DevelopingDataProducts/tree/gh-pages/Project2)
