@@ -41,7 +41,8 @@ g <- ggplot(bw, aes(x=Country.Name, y=meanLE, fill=class)) +
     geom_bar(stat = "identity")+
     scale_fill_manual(values=c("green3", "firebrick2"))+
     coord_flip() +
-    labs(y='Mean Life Expectancy', x='Country', title="Ten Best and Worst Countries\nFor Life Expectancy (1960-2014)") +
+    labs(y='Mean Life Expectancy', x='Country', 
+         title="Ten Best and Worst Countries For Life Expectancy (1960-2014)") +
     theme(legend.position = 'none')
 p <- ggplotly(g)
 p
@@ -54,7 +55,7 @@ miMelt <- melt(mi, id.vars=1, measure.vars=2:56, value.name='LifeExp')
 miMelt$Year <- rep(1960:2014, each=12)
 g2 <- ggplot(miMelt, aes(x=Year, y=LifeExp,color=Country.Name))+
     geom_line()+
-    labs(y='Life Expectancy', title='Top 12 Countries with Most Improved Life Expectancy')+
+    labs(y='Life Expectancy', title='Top 12 Countries with Most Improved Life Expectancy (1960-2014)')+
     theme(legend.title = element_blank())
 p2 <- ggplotly(g2)
 p2
