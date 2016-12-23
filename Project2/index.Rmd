@@ -2,7 +2,7 @@
 title: "Week 3 Assignment"
 author: "Fenton Taylor"
 date: "December 22, 2016"
-output: ioslides_presentation
+output: slidy_presentation
 ---
 
 ```{r setup, include=FALSE}
@@ -13,5 +13,9 @@ library(plotly)
 ## Plot Test
 
 ```{r, message=FALSE, warning=FALSE}
-plot_ly(mtcars, x = ~wt, y = ~mpg, mode = "markers")
+set.seed(4343)
+x <- rnorm(10)
+y <- rnorm(10)
+pts <- cbind.data.frame(x,y)
+plot_ly(pts, x=~x, y=~y, mode="markers")
 ```
