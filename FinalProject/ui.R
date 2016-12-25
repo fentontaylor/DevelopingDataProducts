@@ -9,6 +9,7 @@
 
 library(shiny)
 life <- read.csv('data/lifeExp.csv')
+cnames <- c(as.character(life$Country.Name),"NONE")
 
 # Define UI for application that draws a histogram
 shinyUI(fluidPage(
@@ -24,9 +25,11 @@ shinyUI(fluidPage(
   sidebarLayout(
     sidebarPanel(
        selectInput("country1", label=h4("Select Country/Region #1"), 
-                   choices = life$Country.Name, selected = 'United States'),
+                   choices = cnames, selected = 'United States'),
        selectInput("country2", label=h4("Select Country/Region #2"), 
-                   choices = life$Country.Name, selected = 'China')
+                   choices = cnames, selected = 'NONE'),
+       checkboxInput("minMax", label=h4("Show Min/Max Values"), value=TRUE),
+       checkboxInput("worldAvg", label=h4("Show World Average"))
     ),
     
     # Show a plot of the generated distribution
