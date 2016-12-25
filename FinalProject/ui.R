@@ -29,7 +29,7 @@ shinyUI(fluidPage(
        selectInput("country2", label=h4("Select Country/Region #2"), 
                    choices = cnames, selected = 'NONE'),
        checkboxInput("minMax", label=h4("Show Min/Max Values"), value=TRUE),
-       checkboxInput("worldAvg", label=h4("Show World Average"))
+       checkboxInput("worldAvg", label=h4("Show World Average"), value=TRUE)
     ),
     
     # Show a plot of the generated distribution

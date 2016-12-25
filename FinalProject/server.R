@@ -1,6 +1,7 @@
 library(shiny)
 library(ggplot2)
 library(reshape2)
+library(dplyr)
 
 life <- read.csv("./data/lifeExp.csv")
 life <- life[,-c(2:4,60:61)]
@@ -13,13 +14,16 @@ shinyServer(function(input, output) {
         selected <- c(select1, select2)
         
         data <- life[life$Country.Name %in% selected, ]
-        
         mdata <- melt(data, id.vars=1, measure.vars=2:56, value.name='LifeExp')
         mdata$Year <- rep(1960:2014, each=2-sum(is.na(selected)))
         
+        ###This part needs to be fixed to get the min and max for each country
         if(input$minMax){
-            minLE <- mdata[which.min(mdata$LifeExp),3:4]
-            maxLE <- mdata[which.max(mdata$LifeExp),3:4]
+            mm1 <- mdata %>% filter(Country.Name==select1)
+            mm2 <- mdata %>% filter(Country.Name==select2)
+            mm1 <- mm1[c(which.min(mm1$LifeExp),which.max(mm1$LifeExp)),c(1,3,4)]
+            mm2 <- mm2[c(which.min(mm2$LifeExp),which.max(mm2$LifeExp)),c(1,3,4)]
+            minMaxLE <- rbind(mm1,mm2)
         }
         
         if(input$worldAvg){
@@ -31,8 +35,10 @@ shinyServer(function(input, output) {
       
         g <- ggplot(mdata, aes(x=Year, y=LifeExp, color=Country.Name))+
             geom_line(lwd=2, alpha=0.7)+
+            {if(input$minMax)geom_point(aes(x=Year, y=LifeExp, color=Country.Name),
+                                        data=minMaxLE, size=5)}+
             {if(input$worldAvg)geom_line(aes(x=Year, y=LifeExp),data=meltAvg, 
-                                         color="palegreen3", lwd=1.5, lty=2, alpha=0.5)}+
+                                         color="palegreen3", lwd=1, lty=5, alpha=0.5)}+
             theme_minimal()+
             labs(y="Life Expectancy", 
                  title=paste0("Change in ", 
