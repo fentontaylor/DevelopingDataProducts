@@ -5,6 +5,7 @@ library(dplyr)
 
 life <- read.csv("./data/lifeExp.csv")
 life <- life[,-c(2:4,60:61)]
+life <- life[-which(rowSums(is.na(life))==55),]
 
 shinyServer(function(input, output) {
     
@@ -16,14 +17,32 @@ shinyServer(function(input, output) {
         data <- life[life$Country.Name %in% selected, ]
         mdata <- melt(data, id.vars=1, measure.vars=2:56, value.name='LifeExp')
         mdata$Year <- rep(1960:2014, each=2-sum(is.na(selected)))
+        mdata$Country.Name <- factor(mdata$Country.Name, levels=selected)
         
         ###This part needs to be fixed to get the min and max for each country
         if(input$minMax){
-            mm1 <- mdata %>% filter(Country.Name==select1)
-            mm2 <- mdata %>% filter(Country.Name==select2)
-            mm1 <- mm1[c(which.min(mm1$LifeExp),which.max(mm1$LifeExp)),c(1,3,4)]
-            mm2 <- mm2[c(which.min(mm2$LifeExp),which.max(mm2$LifeExp)),c(1,3,4)]
+            m1 <- mdata %>% filter(Country.Name==select1)
+            m2 <- mdata %>% filter(Country.Name==select2)
+            mm1 <- m1[c(which.min(m1$Year),which.max(m1$Year)),c(1,3,4)]
+            mm2 <- m2[c(which.min(m2$Year),which.max(m2$Year)),c(1,3,4)]
             minMaxLE <- rbind(mm1,mm2)
+            if(any(m1$LifeExp < min(mm1$LifeExp))){
+                extra <- m1[which.min(m1$LifeExp),c(1,3,4)]
+                minMaxLE <- rbind(minMaxLE,extra)
+            }
+            if(any(m1$LifeExp > max(mm1$LifeExp))){
+                extra <- m1[which.max(m1$LifeExp),c(1,3,4)]
+                minMaxLE <- rbind(minMaxLE,extra)
+            }
+            if(any(m2$LifeExp < min(mm2$LifeExp))){
+                extra <- m2[which.min(m2$LifeExp),c(1,3,4)]
+                minMaxLE <- rbind(minMaxLE,extra)
+            }
+            if(any(m2$LifeExp > max(mm2$LifeExp))){
+                extra <- m2[which.max(m2$LifeExp),c(1,3,4)]
+                minMaxLE <- rbind(minMaxLE,extra)
+            }
+            
         }
         
         if(input$worldAvg){
@@ -35,6 +54,7 @@ shinyServer(function(input, output) {
       
         g <- ggplot(mdata, aes(x=Year, y=LifeExp, color=Country.Name))+
             geom_line(lwd=2, alpha=0.7)+
+            scale_color_manual(values=c("dodgerblue3", "indianred3"))+
             {if(input$minMax)geom_point(aes(x=Year, y=LifeExp, color=Country.Name),
                                         data=minMaxLE, size=5)}+
             {if(input$worldAvg)geom_line(aes(x=Year, y=LifeExp),data=meltAvg, 

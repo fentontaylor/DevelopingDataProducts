@@ -9,6 +9,8 @@
 
 library(shiny)
 life <- read.csv('data/lifeExp.csv')
+life <- life[,-c(2:4,60:61)]
+life <- life[-which(rowSums(is.na(life))==55),]
 cnames <- c(as.character(life$Country.Name),"NONE")
 
 # Define UI for application that draws a histogram
@@ -28,7 +30,7 @@ shinyUI(fluidPage(
                    choices = cnames, selected = 'United States'),
        selectInput("country2", label=h4("Select Country/Region #2"), 
                    choices = cnames, selected = 'NONE'),
-       checkboxInput("minMax", label=h4("Show Min/Max Values"), value=TRUE),
+       checkboxInput("minMax", label=h4("Show Min/Max Values"), value=FALSE),
        checkboxInput("worldAvg", label=h4("Show World Average"), value=TRUE)
     ),
     
