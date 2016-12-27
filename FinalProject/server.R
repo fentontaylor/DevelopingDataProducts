@@ -14,9 +14,10 @@ shinyServer(function(input, output) {
         select2 <- ifelse(input$country2=="NONE", NA, input$country2)
         selected <- c(select1, select2)
         
-        data <- life[life$Country.Name %in% selected, ]
+        data <- life %>% filter(Country.Name %in% selected)
         mdata <- melt(data, id.vars=1, measure.vars=2:56, value.name='LifeExp')
         mdata$Year <- rep(1960:2014, each=2-sum(is.na(selected)))
+        mdata <- mdata[complete.cases(mdata),]
         mdata$Country.Name <- factor(mdata$Country.Name, levels=selected)
         
         ###This part needs to be fixed to get the min and max for each country
@@ -26,23 +27,22 @@ shinyServer(function(input, output) {
             mm1 <- m1[c(which.min(m1$Year),which.max(m1$Year)),c(1,3,4)]
             mm2 <- m2[c(which.min(m2$Year),which.max(m2$Year)),c(1,3,4)]
             minMaxLE <- rbind(mm1,mm2)
-            if(any(m1$LifeExp < min(mm1$LifeExp))){
+            if(any(m1$LifeExp < min(mm1$LifeExp, na.rm=T))){
                 extra <- m1[which.min(m1$LifeExp),c(1,3,4)]
                 minMaxLE <- rbind(minMaxLE,extra)
             }
-            if(any(m1$LifeExp > max(mm1$LifeExp))){
+            if(any(m1$LifeExp > max(mm1$LifeExp, na.rm=T))){
                 extra <- m1[which.max(m1$LifeExp),c(1,3,4)]
                 minMaxLE <- rbind(minMaxLE,extra)
             }
-            if(any(m2$LifeExp < min(mm2$LifeExp))){
+            if(any(m2$LifeExp < min(mm2$LifeExp, na.rm=T))){
                 extra <- m2[which.min(m2$LifeExp),c(1,3,4)]
                 minMaxLE <- rbind(minMaxLE,extra)
             }
-            if(any(m2$LifeExp > max(mm2$LifeExp))){
+            if(any(m2$LifeExp > max(mm2$LifeExp, na.rm=T))){
                 extra <- m2[which.max(m2$LifeExp),c(1,3,4)]
                 minMaxLE <- rbind(minMaxLE,extra)
             }
-            
         }
         
         if(input$worldAvg){
@@ -54,7 +54,9 @@ shinyServer(function(input, output) {
       
         g <- ggplot(mdata, aes(x=Year, y=LifeExp, color=Country.Name))+
             geom_line(lwd=2, alpha=0.7)+
-            scale_color_manual(values=c("dodgerblue3", "indianred3"))+
+            ylim(19,84)+
+            scale_color_manual(name = "Country / Region",
+                               values=c("dodgerblue3", "indianred3"))+
             {if(input$minMax)geom_point(aes(x=Year, y=LifeExp, color=Country.Name),
                                         data=minMaxLE, size=5)}+
             {if(input$worldAvg)geom_line(aes(x=Year, y=LifeExp),data=meltAvg, 
