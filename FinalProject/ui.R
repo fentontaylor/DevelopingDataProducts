@@ -24,7 +24,10 @@ shinyUI(fluidPage(
     
     mainPanel(
         h4(textOutput("names")),
-        plotOutput("plot1")
+        plotOutput("plot1"),
+        br(),
+        hr(),
+        tableOutput("data")
     )
   )
 ))

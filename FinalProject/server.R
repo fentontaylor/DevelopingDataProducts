@@ -9,7 +9,7 @@ life <- life[-which(rowSums(is.na(life))==55),]
 
 shinyServer(function(input, output) {
     
-    output$plot1 <- renderPlot({
+    dataInput <- reactive({
         select1 <- ifelse(input$country1=="NONE", NA, input$country1)
         select2 <- ifelse(input$country2=="NONE", NA, input$country2)
         selected <- c(select1, select2)
@@ -21,46 +21,45 @@ shinyServer(function(input, output) {
         mdata$Country.Name <- factor(mdata$Country.Name, levels=selected)
         mdata <- arrange(mdata, Country.Name)
         
-        ###This part needs to be fixed to get the min and max for each country
-        if(input$minMax){
-            m1 <- mdata %>% filter(Country.Name==select1)
-            m2 <- mdata %>% filter(Country.Name==select2)
-            mm1 <- m1[c(which.min(m1$Year),which.max(m1$Year)),]
-            mm2 <- m2[c(which.min(m2$Year),which.max(m2$Year)),]
-            minMaxLE <- rbind(mm1,mm2)
-            if(any(m1$LifeExp < min(mm1$LifeExp, na.rm=T))){
-                extra <- m1[which.min(m1$LifeExp),]
-                minMaxLE <- rbind(minMaxLE,extra)
-            }
-            if(any(m1$LifeExp > max(mm1$LifeExp, na.rm=T))){
-                extra <- m1[which.max(m1$LifeExp),]
-                minMaxLE <- rbind(minMaxLE,extra)
-            }
-            if(any(m2$LifeExp < min(mm2$LifeExp, na.rm=T))){
-                extra <- m2[which.min(m2$LifeExp),]
-                minMaxLE <- rbind(minMaxLE,extra)
-            }
-            if(any(m2$LifeExp > max(mm2$LifeExp, na.rm=T))){
-                extra <- m2[which.max(m2$LifeExp),]
-                minMaxLE <- rbind(minMaxLE,extra)
-            }
-            minMaxLE <- arrange(minMaxLE, Country.Name, Year)
+        m1 <- mdata %>% filter(Country.Name==select1)
+        m2 <- mdata %>% filter(Country.Name==select2)
+        mm1 <- m1[c(which.min(m1$Year),which.max(m1$Year)),]
+        mm2 <- m2[c(which.min(m2$Year),which.max(m2$Year)),]
+        minMaxLE <- rbind(mm1,mm2)
+        if(any(m1$LifeExp < min(mm1$LifeExp, na.rm=T))){
+            extra <- m1[which.min(m1$LifeExp),]
+            minMaxLE <- rbind(minMaxLE,extra)
         }
-        
+        if(any(m1$LifeExp > max(mm1$LifeExp, na.rm=T))){
+            extra <- m1[which.max(m1$LifeExp),]
+            minMaxLE <- rbind(minMaxLE,extra)
+        }
+        if(any(m2$LifeExp < min(mm2$LifeExp, na.rm=T))){
+            extra <- m2[which.min(m2$LifeExp),]
+            minMaxLE <- rbind(minMaxLE,extra)
+        }
+        if(any(m2$LifeExp > max(mm2$LifeExp, na.rm=T))){
+            extra <- m2[which.max(m2$LifeExp),]
+            minMaxLE <- rbind(minMaxLE,extra)
+        }
+        minMaxLE <- arrange(minMaxLE, Country.Name, Year)
+        list(mdata, minMaxLE)
+    })
+    output$plot1 <- renderPlot({
         if(input$worldAvg){
             avg <- colMeans(life[,-1], na.rm = TRUE)
             avg <- cbind.data.frame(Country.Name="World", t(avg))
             meltAvg <- melt(avg, id.vars=1, measure.vars=2:56, value.name = 'LifeExp')
             meltAvg$Year <- 1960:2014
         }
-      
-        g <- ggplot(mdata, aes(x=Year, y=LifeExp, color=Country.Name))+
+         
+        g <- ggplot(dataInput()[[1]], aes(x=Year, y=LifeExp, color=Country.Name))+
             geom_line(lwd=2, alpha=0.7)+
             ylim(19,84)+
             scale_color_manual(name = "Country / Region:",
                                values=c("dodgerblue3", "indianred3"))+
             {if(input$minMax)geom_point(aes(x=Year, y=LifeExp, color=Country.Name),
-                                        data=minMaxLE, size=5)}+
+                                        data=dataInput()[[2]], size=5)}+
             {if(input$worldAvg)geom_line(aes(x=Year, y=LifeExp),data=meltAvg, 
                                          color="palegreen3", lwd=1, lty=5, alpha=0.5)}+
             theme_minimal()+
@@ -81,9 +80,28 @@ shinyServer(function(input, output) {
     })
     
     output$data <- renderTable({
-        if(input$data){
-            mdata <- arrange(mdata, Country.Name)
-            mdata
-        }
+        tdata <- dataInput()[[2]]
+        c1 <- input$country1
+        c2 <- input$country2
+        t1 <- tdata %>% filter(Country.Name==c1)
+        t2 <- tdata %>% filter(Country.Name==c2)
+        start1 <- t1[which.min(t1$Year),]
+        start2 <- t2[which.min(t2$Year),]
+        end1 <- t1[which.max(t1$Year),2:3]
+        end2 <- t2[which.max(t2$Year),2:3]
+        min1 <- t1[which.min(t1$LifeExp),2:3]
+        min2 <- t2[which.min(t2$LifeExp),2:3]
+        max1 <- t1[which.max(t1$LifeExp),2:3]
+        max2 <- t2[which.max(t2$LifeExp),2:3]
+        
+        t <- rbind(cbind(start1,end1,min1,max1),
+                   cbind(start2,end2,min2,max2))
+        
+        names(t)[c(1,2,4,6,8)] <- c("Country","Starting L.E.","Latest L.E.", "Min. L.E.",
+                                  "Max. L.E.")
+        t$"Overall Change" <- t[,4]-t[,2]
+        t$Average <- dataInput()[[1]] %>% group_by(Country.Name) %>% 
+            summarize(Average=mean(LifeExp)) %>% select(Average)
+        t
     })
 })
