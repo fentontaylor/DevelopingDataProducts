@@ -81,27 +81,20 @@ shinyServer(function(input, output) {
     
     output$data <- renderTable({
         tdata <- dataInput()[[2]]
+        names(tdata) <- c("Country Name", "Life Exp.", "Year")
+        tdata
+    })
+    
+    output$stats <- renderTable({
+        tdata <- dataInput()[[2]]
         c1 <- input$country1
         c2 <- input$country2
-        t1 <- tdata %>% filter(Country.Name==c1)
-        t2 <- tdata %>% filter(Country.Name==c2)
-        start1 <- t1[which.min(t1$Year),]
-        start2 <- t2[which.min(t2$Year),]
-        end1 <- t1[which.max(t1$Year),2:3]
-        end2 <- t2[which.max(t2$Year),2:3]
-        min1 <- t1[which.min(t1$LifeExp),2:3]
-        min2 <- t2[which.min(t2$LifeExp),2:3]
-        max1 <- t1[which.max(t1$LifeExp),2:3]
-        max2 <- t2[which.max(t2$LifeExp),2:3]
-        
-        t <- rbind(cbind(start1,end1,min1,max1),
-                   cbind(start2,end2,min2,max2))
-        
-        names(t)[c(1,2,4,6,8)] <- c("Country","Starting L.E.","Latest L.E.", "Min. L.E.",
-                                  "Max. L.E.")
-        t$"Overall Change" <- t[,4]-t[,2]
-        t$Average <- dataInput()[[1]] %>% group_by(Country.Name) %>% 
-            summarize(Average=mean(LifeExp)) %>% select(Average)
-        t
+        t1 <- filter(tdata, Country.Name==c1)
+        t2 <- filter(tdata, Country.Name==c2)
+        change <- round(c(t1[nrow(t1),2]-t1[1,2], t2[nrow(t2),2]-t2[1,2]),2)
+        average <- dataInput()[[1]] %>% group_by(Country.Name) %>% summarise(Average=mean(LifeExp))
+        average$`Overall Change` <- change
+        names(average)[1] <- "Country Name"
+        average
     })
 })
