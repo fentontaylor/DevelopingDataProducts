@@ -1,11 +1,8 @@
 library(shiny)
-life <- read.csv('data/lifeExp.csv')
+life <- read.csv('./data/lifeExp.csv')
 life <- life[,-c(2:4,60:61)]
-life <- life[-which(rowSums(is.na(life))==55),]
-life$Country.Name <- as.character(life$Country.Name) 
-life$Country.Name[grep("Korea, Rep", life$Country.Name)] <- "Korea, Rep. (South)"
-life$Country.Name[grep("Korea, Dem", life$Country.Name)] <- "Korea, D.P.R. (North)"
-life$Country.Name[grep("Cote d'Ivoire", life$Country.Name)] <- "Ivory Coast"
+life <- life[-c(which(rowSums(is.na(life))==55),192),]
+
 cnames <- c(as.character(life$Country.Name),"NONE")
 
 shinyUI(fluidPage(
